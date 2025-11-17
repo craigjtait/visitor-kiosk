@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <script src="date.format.js"></script>
+  <script src="webex.js"></script>
+  <script src="index.js" defer></script>
+  <script src="alpine.js" defer></script>
+
+  <title>Cisco Visitor Kiosk</title>
+
+  <link rel="icon" href="./assets/logo.png">
+  <link href="styles/style.css" rel="stylesheet">
+</head>
+
+<body x-data="dataModel" x-cloak :class="theme">
+  <header>
+    <div @click="location.reload()" class="logo"></div>
+    <div class="time-date">
+      <div class="date" x-text="date"></div>
+      <div class="time" x-text="time"></div>
+    </div>
+  </header>
+  <main x-show="page === 'home'">
+    <h1>Welcome</h1>
+    <div>Visitor please select an action below.</div>
+    <form class="select-action" @submit.prevent="">
+      <div class="action">
+        <button @click="checkOut()" class="secondary">Check out</button>
+        <button @click="next()" class="primary">Check in</button>
+      </div>
+    </form>
+    <div class="mini-apps">
+      <button class="call" @click="call()">Call Reception</button>
+      <button class="taxi" @click="page = 'taxi'">Taxi</button>
+      <button class="map" @click="page = 'map'">Map</button>
+    </div>
+  </main>
+  <main x-show="page === 'checkIn'">
+    <h1>Check in</h1>
+    <div>Please enter your name and email below.</div>
+    <form class="check-in" @submit.prevent="">
+      <div>
+        <input placeholder="Full name" id="name" x-model="name" />
+      </div>
+      <div>
+        <input placeholder="Your email address" x-model="email" @keydown.enter.prevent="if (validForm) next()"/>
+      </div>
+      <div class="action">
+        <button @click="home()" class="secondary">Back</button>
+        <button @click="next()" :disabled="!validForm" class="primary">Continue</button>
+      </div>
+    </form>
+  </main>
+  <main x-show="page === 'findHost'">
+    <h1>Find your host</h1>
+    <div x-show="!currentHost">Please enter the name of your host.</div>
+    <form class="check-in" @submit.prevent="">
+      <div>
+        <input placeholder="Host name" id="host" x-model="hostSearch" @input="searchHost()" />
+      </div>
+      <div class="help" x-text="searchStatus"></div>
+      <div class="found-hosts" x-show="foundHosts.length">
+        <template x-for="host in foundHosts">
+          <div class="host" @click="selectHost(host)">
+            <div class="avatar" :style="getAvatar(host)"></div>
+            <div class="name" x-text="host && host.displayName"></div>
+          </div>
+        </template>
+      </div>
+      <div class="action">
+        <button @click="back()" class="secondary">Back</button>
+      </div>
+    </form>
+  </main>
+  <main x-show="page === 'confirmHost'">
+    <h1>Selected Host</h1>
+    <div class="selected-host" x-show="currentHost">
+      <div class="avatar" :style="getAvatar(currentHost)"></div>
+      <div class="name" x-text="currentHost && currentHost.displayName"></div>
+    </div>
+    <div class="action">
+      <button @click="back()" class="secondary">Back</button>
+      <button :disabled="!currentHost" @click="next()" class="primary">Continue</button>
+    </div>
+  </main>
+  <main x-show="page === 'photo'">
+    <h1>Take a photo</h1>
+    <div class="box">
+      <video class="webcam" x-show="!photo" autoplay></video>
+      <canvas class="photo" x-show="photo"></canvas>
+      <div class="countdown" x-text="photoTime" x-show="photoTime > 0"></div>
+      <div class="photo-flash"></div>
+    </div>
+    <div class="action">
+      <button :disabled="photoTime > 0" @click="back()" class="secondary">Back</button>
+      <button :disabled="photoTime > 0" @click="takePhotoCountdown()" class="primary" x-show="!photo">Take photo</button>
+      <button @click="takePhotoCountdown()" x-show="photo">Re-take</button>
+      <button :disabled="photoTime > 0" @click="next()" x-show="photo" class="primary">Next</button>
+      <br/>
+      <button @click="next()" class="link">Skip photo</button>
+    </div>
+    <audio src="assets/shutter.mp3" id="shutter-sound"></audio>
+  </main>
+  <main x-show="page === 'confirm'">
+    <h1>Confirm details</h1>
+
+    <div class="business-card">
+      <img class="photo" :src="photoSrc()" />
+      <div class="name" x-text="name"></div>
+      <div class="email" x-text="email"></div>
+      <div class="visiting">Visiting:
+        <span x-text="currentHost && currentHost.displayName"></span>
+      </div>
+    </div>
+    <div class="action">
+      <button @click="back()" class="secondary">Back</button>
+      <button @click="next()" :disabled="!validForm" class="primary">Register</button>
+    </div>
+  </main>
+  <main x-show="page === 'registered'">
+    <h1>Welcome <span x-text="name"></span></h1>
+    <div>Your badge is printing. Please wear it during your stay.
+    <p/>
+    We sent a message to
+      <span x-text="currentHost && currentHost.displayName"></span>
+      that you have arrived.
+    <p/>
+    Grab a coffee or have yourself a drink while you wait.</div>
+    <form class="registered" @submit.prevent="">
+      <div class="action">
+        <button @click="home()" class="primary">OK</button>
+      </div>
+    </form>
+  </main>
+  <main x-show="page === 'checkOut'">
+    <h1>Check out</h1>
+    <div>Enter your email to check out.</div>
+    <form @submit.prevent="">
+      <div>
+        <input placeholder="Email address" x-model="email" @keydown.enter.prevent="if (validForm) next()"/>
+      </div>
+      <div class="action">
+        <button @click="home()" class="secondary">Back</button>
+        <button @click="next()" :disabled="!validForm" class="primary">Continue</button>
+      </div>
+    </form>
+  </main>
+  <main x-show="page === 'taxi'">
+    <h1>Call Taxi</h1>
+    <div>Enter your phone number, so the taxi can call you when it arrives.</div>
+    <form @submit.prevent="">
+      <div>
+        <input
+          placeholder="Your phone number"
+          x-model="phoneNumber"
+          @keydown.enter.prevent="if (validForm) next()"
+        />
+      </div>
+      <div class="action">
+        <button @click="home()" class="secondary">Back</button>
+        <button @click="next()" :disabled="!validForm" class="primary">Continue</button>
+      </div>
+    </form>
+  </main>
+  <main x-show="page === 'taxiConfirmed'">
+    <h1>Taxi ordered</h1>
+    <div>It will call your phone when it arrives.</div>
+    <div>
+      Taxi number: <span x-text="taxiNumber"></span>
+    </div>
+    <div class="action">
+      <button @click="home()" class="primary">Done</button>
+    </div>
+  </main>
+  <main x-show="page === 'checkOutResult'">
+    <h1>Checked out</h1>
+    <div>You were checked out. See you soon!</div>
+    <div class="action">
+      <button @click="home()" :disabled="!validForm" class="primary">Continue</button>
+    </div>
+  </main>
+  <main x-show="page === 'map'">
+    <h1>Area map</h1>
+    <iframe
+      :src="mapUrl"
+      width="600"
+      height="450"
+      style="border:0;"
+      allowfullscreen=""
+      loading="lazy"
+      referrerpolicy="no-referrer-when-downgrade"
+    ></iframe>
+
+    <div class="action">
+      <button @click="home()">Back</button>
+    </div>
+  </main>
+
+
+</body>
+
+</html>
