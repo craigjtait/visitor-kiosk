@@ -61,6 +61,7 @@ const dataModel = {
   },
 
   reset() {
+    this.name = '';
     this.email = '';
     this.currentHost = null;
     this.foundHosts = [];
@@ -79,7 +80,7 @@ const dataModel = {
   get validForm() {
     const emailPattern = /\w+@\w+/;
     if (this.page === 'checkIn') {
-      return this.email.match(emailPattern);
+      return this.name.trim().length && this.email.match(emailPattern);
     }
     else if (this.page === 'checkOut') {
       return this.email.match(emailPattern);
@@ -92,7 +93,7 @@ const dataModel = {
 
   checkIn() {
     this.page = 'checkIn';
-    this.focus('#email');
+    this.focus('#name');
   },
 
   focus(id) {
@@ -115,6 +116,7 @@ const dataModel = {
   register() {
     this.page = 'registered';
     const msg = hostMessage
+      .replace('$name', this.name.trim())
       .replace('$email', this.email.trim());
     if (!this.currentHost) {
       return;
