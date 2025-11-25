@@ -7,20 +7,21 @@ Details:
 `;
 
 const dataModel = {
-// home > checkIn > findHost > confirmHost > photo > confim > registered | checkOut > checkOutResult
+// home > checkIn > photo > confim > registered | checkOut > checkOutResult
   page: 'home',
   name: '',
   email: '',
-  hostSearch: '',
-  currentHost: null,
+  // Removed: hostSearch: '',
+  // Removed: currentHost: null,
   isAuthenticating: false, // New: To manage button state during async auth
   visitorAuthenticated: false, // New: Tracks if the current visitor's email is in the space
   roomId: '', // New: Webex Room ID
   configError: false, // New: Flag for configuration errors
   date: 'October 6, 2022',
   time: '10:35 AM',
-  foundHosts: [],
-  searchStatus: '',
+  // Removed: foundHosts: [],
+  loggingSpace: 'Y2lzY29zcGFyazovL3VzL01FTUJFUlNISVAvMDVhOGVlODItNzBjMC00MjRhLWEwY2QtZDk3M2E0Mzc5MjdlOjY2MmViYzQwLTNkNmMtMTFlNjthZjBjLTRmNWEzNDRlMDliYg', // Assuming this is intended to be a roomId for notifications
+  // Removed: searchStatus: '',
   photo: null,
   photoTimer: 0,
   photoTime: 0,
@@ -64,9 +65,9 @@ const dataModel = {
   reset() {
     this.name = '';
     this.email = '';
-    this.currentHost = null;
-    this.foundHosts = [];
-    this.searchStatus = '';
+    // Removed: this.currentHost = null;
+    // Removed: this.foundHosts = [];
+    // Removed: this.searchStatus = '';
     this.photo = null;
     this.phoneNumber = '';
     clearInterval(this.photoTimer);
@@ -111,40 +112,30 @@ const dataModel = {
 
   },
 
-  findHost() {
-    this.page = 'findHost';
-    this.focus('#host');
-  },
+  // Removed: findHost() function
 
   register() {
     this.page = 'registered';
     const msg = hostMessage
       .replace('$name', this.name.trim())
       .replace('$email', this.email.trim());
-    if (!this.currentHost) {
-      return;
-    }
 
-    const email = this.currentHost.emails[0];
+    // Use loggingSpace as the target roomId for notifications
+    const roomIdForNotification = this.loggingSpace;
     const token = this.getToken();
 
-    if (!token) {
+    if (!token || !roomIdForNotification) {
+      console.warn('Missing token or loggingSpace for registration message.');
       return;
     }
-    sendMessage(token, email, msg, this.photo)
+    sendMessage(token, roomIdForNotification, msg, this.photo)
       .catch(e => {
         console.warn(e);
-        alert('We were not able to send a message to the host at this time.');
+        alert('We were not able to send a message to the notification space at this time.');
       });
    },
 
-  selectHost(host) {
-    this.currentHost = { displayName: host.personDisplayName, emails: [host.personEmail], avatar: host.personAvatar || null }; // Adapt to membership object structure, assuming personAvatar might exist or be null
-    this.hostSearch = '';
-    this.searchStatus = '';
-    this.foundHosts = [];
-    this.next();
-  },
+  // Removed: selectHost(host) function
 
   getToken() {
     // Only get token from URL parameters
@@ -152,16 +143,16 @@ const dataModel = {
   },
 
   next() {
-    // home > checkIn > findHost > photo > confim > registered
+    // home > checkIn > photo > confim > registered
     const { page } = this;
 
     if (page === 'home') {
       this.checkIn();
     }
     else if (page === 'checkIn') {
-      // NEW: Authenticate the visitor before finding a host
+      // NEW: Authenticate the visitor before proceeding
       if (this.visitorAuthenticated) { // If already authenticated (e.g., user went back and tried again), proceed.
-        this.findHost();
+        this.showPhotoPage(); // Directly go to photo page after authentication
         return; // Exit after synchronous action
       }
 
@@ -178,19 +169,15 @@ const dataModel = {
         this.isAuthenticating = false; // End authenticating, regardless of outcome
         if (isMember) {
           this.visitorAuthenticated = true;
-          this.findHost(); // Proceed only if authenticated
+          this.showPhotoPage(); // Proceed only if authenticated
         } else {
           this.page = 'visitorNotAuthorized'; // Set page to error if not authenticated
         }
       });
       return; // IMPORTANT: Prevent further synchronous execution of next() for this step.
     }
-    else if (page === 'findHost') {
-      this.confirmHost();
-    }
-    else if (page === 'confirmHost') {
-      this.showPhotoPage();
-    }
+    // Removed: else if (page === 'findHost') { this.confirmHost(); }
+    // Removed: else if (page === 'confirmHost') { this.showPhotoPage(); }
     else if (page === 'photo') {
       this.showConfirmation();
     }
@@ -221,21 +208,15 @@ const dataModel = {
   },
 
   back() {
-    // home > checkIn > findHost > photo > confim > registered | checkOut
+    // home > checkIn > photo > confim > registered | checkOut
     const { page } = this;
     if (page === 'checkIn') {
       this.home();
     }
-    else if (page === 'findHost') {
+    else if (page === 'photo') { // Back from photo goes to checkIn
       this.checkIn();
     }
-    else if (page === 'confirmHost') {
-      this.findHost();
-    }
-    else if (page === 'photo') {
-      this.confirmHost();
-    }
-    else if (page === 'confirm') {
+    else if (page === 'confirm') { // Back from confirm goes to photo
       this.showPhotoPage();
     }
     else {
@@ -318,48 +299,11 @@ const dataModel = {
     // https://github.com/jpeg-js/jpeg-js/blob/master/lib/encoder.js
   },
 
-  searchHost() {
-    const word = this.hostSearch.trim();
+  // Removed: searchHost() function
 
-    const token = this.getToken();
+  // Removed: confirmHost() function
 
-    // Ensure token and roomId are available before searching
-    if (!token || !this.roomId) {
-      this.configError = true;
-      this.page = 'configError';
-      return;
-    }
-
-    if (word.length > 2) { // Minimal length for search
-      this.searchStatus = 'Searching...';
-      // Call the new searchMembership function from webex.js
-      searchMembership(word, token, this.roomId, list => {
-        if (list.length > 0) {
-          this.foundHosts = list;
-          this.searchStatus = 'Found: ' + list.length;
-        } else {
-          this.foundHosts = [];
-          this.searchStatus = 'No host found in this space.';
-          this.page = 'notRegistered'; // Redirect to not registered page if no match
-        }
-      });
-    } else {
-      this.foundHosts = [];
-      this.searchStatus = '';
-    }
-  },
-
-  confirmHost() {
-    this.page = 'confirmHost';
-  },
-
-  getAvatar(person) {
-    const { avatar } = person || {};
-    const displayAvatar = avatar || person.personAvatar; // Check for both 'avatar' and 'personAvatar'
-    return displayAvatar
-      ? { backgroundImage: `url(${displayAvatar.replace('~1600', '~110')})` }
-      : null;
-  },
+  // Removed: getAvatar(person) function
 
   checkOut() {
     this.page = 'checkOut';

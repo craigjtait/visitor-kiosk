@@ -34,9 +34,9 @@
       </div>
     </form>
     <div class="mini-apps">
-      <button class="call" @click="call()">Call Organizers</button>
-      <!-- <button class="taxi" @click="page = 'taxi'">Taxi</button>
-      <button class="map" @click="page = 'map'">Map</button> -->
+      <button class="call" @click="call()">Call Reception</button>
+      <button class="taxi" @click="page = 'taxi'">Taxi</button>
+      <button class="map" @click="page = 'map'">Map</button>
     </div>
   </main>
   <main x-show="page === 'checkIn'">
@@ -58,38 +58,8 @@
       </div>
     </form>
   </main>
-  <main x-show="page === 'findHost'">
-    <h1>Find your host</h1>
-    <div x-show="!currentHost">Please enter the name of your host.</div>
-    <form class="check-in" @submit.prevent="">
-      <div>
-        <input placeholder="Host name" id="host" x-model="hostSearch" @input="searchHost()" />
-      </div>
-      <div class="help" x-text="searchStatus"></div>
-      <div class="found-hosts" x-show="foundHosts.length">
-        <template x-for="host in foundHosts">
-          <div class="host" @click="selectHost(host)">
-            <div class="avatar" :style="getAvatar(host)"></div>
-            <div class="name" x-text="host && host.personDisplayName"></div>
-          </div>
-        </template>
-      </div>
-      <div class="action">
-        <button @click="back()" class="secondary">Back</button>
-      </div>
-    </form>
-  </main>
-  <main x-show="page === 'confirmHost'">
-    <h1>Selected Host</h1>
-    <div class="selected-host" x-show="currentHost">
-      <div class="avatar" :style="getAvatar(currentHost)"></div>
-      <div class="name" x-text="currentHost && currentHost.displayName"></div>
-    </div>
-    <div class="action">
-      <button @click="back()" class="secondary">Back</button>
-      <button :disabled="!currentHost" @click="next()" class="primary">Continue</button>
-    </div>
-  </main>
+  <!-- Removed: main x-show="page === 'findHost'" block -->
+  <!-- Removed: main x-show="page === 'confirmHost'" block -->
   <main x-show="page === 'photo'">
     <h1>Take a photo</h1>
     <div class="box">
@@ -115,9 +85,7 @@
       <img class="photo" :src="photoSrc()" />
       <div class="name" x-text="name"></div>
       <div class="email" x-text="email"></div>
-      <div class="visiting">Visiting:
-        <span x-text="currentHost && currentHost.displayName"></span>
-      </div>
+      <!-- Removed: Visiting host line -->
     </div>
     <div class="action">
       <button @click="back()" class="secondary">Back</button>
@@ -128,9 +96,7 @@
     <h1>Welcome <span x-text="name"></span></h1>
     <div>Your badge is printing. Please wear it during your stay.
     <p/>
-    We sent a message to
-      <span x-text="currentHost && currentHost.displayName"></span>
-      that you have arrived.
+    We sent a message to the notification space that you have arrived.
     <p/>
     Grab a coffee or have yourself a drink while you wait.</div>
     <form class="registered" @submit.prevent="">
@@ -223,8 +189,8 @@
 
   <!-- New: Visitor Not Authorized Page -->
   <main x-show="page === 'visitorNotAuthorized'">
-    <h1>Not Registered</h1>
-    <div>It appears the email address <span x-text="email"></span> is not registered for this event.</div>
+    <h1>Access Denied</h1>
+    <div>The email address <span x-text="email"></span> is not registered for this event.</div>
     <p>Please check your email or contact event staff.</p>
     <div class="action">
       <button @click="next()" class="primary">OK</button>

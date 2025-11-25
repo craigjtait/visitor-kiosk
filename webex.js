@@ -23,13 +23,14 @@ async function get(url, token) {
   }
 }
 
-function sendMessage(token, toPersonEmail, markdown, file) {
+// Modified sendMessage to accept roomId instead of toPersonEmail
+function sendMessage(token, roomId, markdown, file) {
   const formData = new FormData();
   if (file) {
     formData.append('files', file);
   }
   formData.set('markdown', markdown);
-  formData.set('toPersonEmail', toPersonEmail);
+  formData.set('roomId', roomId); // Changed to roomId
 
   const options = {
     headers: {
@@ -63,25 +64,4 @@ async function checkVisitorMembership(email, roomId, token, callback) {
   }
 }
 
-
-async function searchMembership(keyword, token, roomId, callback) {
-  if (!keyword) return;
-  if (!token || !roomId) {
-    // If token or roomId is missing, we cannot perform a real search.
-    // This case should ideally be handled before calling this function.
-    callback([]); // Return empty list if config is missing
-    return;
-  }
-
-  currentSearchNumber++;
-  const id = currentSearchNumber; // avoid closure
-  const url = `${webexMembershipsUrl}?roomId=${roomId}&displayName=${encodeURIComponent(keyword)}`;
-  const result = await get(url, token);
-
-  // a newer search has been requested, discard this one
-  if (id < currentSearchNumber) {
-    return;
-  }
-
-  callback(result);
-}
+// Removed: searchMembership function
