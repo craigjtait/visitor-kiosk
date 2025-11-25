@@ -93,7 +93,7 @@ const dataModel = {
 
   checkIn() {
     this.page = 'checkIn';
-    this.focus('#name');
+    this.focus('#email');
   },
 
   focus(id) {
