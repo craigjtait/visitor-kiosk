@@ -43,9 +43,9 @@
     <h1>Check in</h1>
     <div>Please enter your email below.</div>
     <form class="check-in" @submit.prevent="">
-      <!-- <div>
+      <div>
         <input placeholder="Full name" id="name" x-model="name" />
-      </div> -->
+      </div>
       <div>
         <input placeholder="Your email address" x-model="email" @keydown.enter.prevent="if (validForm && searchStatus !== 'Authenticating visitor...') next()"/>
       </div>
