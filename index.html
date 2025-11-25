@@ -10,7 +10,7 @@
   <script src="index.js" defer></script>
   <script src="alpine.js" defer></script>
 
-  <title>Cisco Visitor Kiosk</title>
+  <title>Cisco Parnter Event Check-in</title>
 
   <link rel="icon" href="./assets/logo.png">
   <link href="styles/style.css" rel="stylesheet">
@@ -26,7 +26,7 @@
   </header>
   <main x-show="page === 'home'">
     <h1>Welcome</h1>
-    <div>Visitor please select an action below.</div>
+    <div>Please select an action below.</div>
     <form class="select-action" @submit.prevent="">
       <div class="action">
         <button @click="checkOut()" class="secondary">Check out</button>
@@ -35,17 +35,17 @@
     </form>
     <div class="mini-apps">
       <button class="call" @click="call()">Call Reception</button>
-      <button class="taxi" @click="page = 'taxi'">Taxi</button>
-      <button class="map" @click="page = 'map'">Map</button>
+      <!--> <button class="taxi" @click="page = 'taxi'">Taxi</button>
+      <button class="map" @click="page = 'map'">Map</button> -->
     </div>
   </main>
   <main x-show="page === 'checkIn'">
     <h1>Check in</h1>
-    <div>Please enter your name and email below.</div>
+    <div>Please enter your email below.</div>
     <form class="check-in" @submit.prevent="">
-      <div>
+      <!-- <div>
         <input placeholder="Full name" id="name" x-model="name" />
-      </div>
+      </div> -->
       <div>
         <input placeholder="Your email address" x-model="email" @keydown.enter.prevent="if (validForm && searchStatus !== 'Authenticating visitor...') next()"/>
       </div>
